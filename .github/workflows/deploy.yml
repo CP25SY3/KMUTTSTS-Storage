@@ -1,0 +1,26 @@
+name: Deploy Storage
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create .env from secrets
+        run: |
+          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
+          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
+          echo "MINIO_PORT=${{ vars.MINIO_PORT || 9000 }}" >> .env
+          echo "MINIO_CONSOLE_PORT=${{ vars.MINIO_CONSOLE_PORT || 9001 }}" >> .env
+          echo "MINIO_BROWSER_REDIRECT_URL=${{ vars.MINIO_BROWSER_REDIRECT_URL }}" >> .env
+
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
