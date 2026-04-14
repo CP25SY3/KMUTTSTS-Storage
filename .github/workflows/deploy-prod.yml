@@ -12,9 +12,6 @@ jobs:
     env:
       DEPLOY_DIR: /home/idcmohuban/kmuttsts-storage/prod
     steps:
-      - name: Clean root-owned Docker artifacts
-        run: sudo rm -rf data/
-
       - uses: actions/checkout@v4
 
       - name: Sync deploy files
