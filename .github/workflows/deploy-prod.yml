@@ -31,5 +31,6 @@ jobs:
         working-directory: ${{ env.DEPLOY_DIR }}
         run: |
           docker compose pull
-          docker compose up -d --remove-orphans
+          docker compose down --remove-orphans 2>/dev/null || true
+          docker compose up -d
           docker image prune -f
