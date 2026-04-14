@@ -31,7 +31,7 @@ services:
     command: server /data --console-address ":9001"
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9000/minio/health/live || exit 1"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -40,7 +40,7 @@ services:
       - internal
 
   mc-backup:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2025-04-22T22-12-26Z
     container_name: mc-backup
     depends_on:
       minio:
@@ -68,9 +68,12 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=5GB"
     restart: always
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     networks:
       - internal
 
