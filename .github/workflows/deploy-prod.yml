@@ -1,0 +1,35 @@
+name: Deploy Production Storage
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, prod-storage]
+    environment: production
+    env:
+      DEPLOY_DIR: /home/idcmohuban/kmuttsts-storage/prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync deploy files
+        run: |
+          mkdir -p "$DEPLOY_DIR"
+          rsync -av --delete deploy/prod/ "$DEPLOY_DIR"/
+
+      - name: Create .env from secrets
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" > .env
+          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
+          echo "MINIO_BROWSER_REDIRECT_URL=${{ vars.MINIO_BROWSER_REDIRECT_URL }}" >> .env
+          echo "MINIO_PROMETHEUS_AUTH_TYPE=public" >> .env
+
+      - name: Deploy with Docker Compose
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
+          docker image prune -f
